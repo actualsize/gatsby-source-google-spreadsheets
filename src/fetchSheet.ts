@@ -14,19 +14,19 @@ export default async (
   apiKey?: string,
 ) => {
   const spreadsheet = await getSpreadsheet(spreadsheetId, credentials, apiKey);
-  const sheets: { [title: string]: object }[] = await Promise.all(
-    spreadsheet.sheetsByIndex.map(
-      async (worksheet: GoogleSpreadsheetWorksheet) => {
-        const rows = await worksheet.getRows({});
-        return {
-          [worksheet.title]: cleanRows(rows).map((row, id) =>
-            Object.assign(row, {
-              id: hash(`${spreadsheetId}-${worksheet.sheetId}-${id}`),
-            }),
-          ),
-        };
-      },
-    ),
+  const worksheets = [spreadsheet._rawSheets[`1915137699`]];
+  const sheets = await Promise.all(
+    worksheets.map(async (worksheet: GoogleSpreadsheetWorksheet) => {
+      await worksheet.loadHeaderRow(2);
+      const rows = await worksheet.getRows({});
+      return {
+        [worksheet.title]: cleanRows(rows).map((row, id) =>
+          Object.assign(row, {
+            id: hash(`${spreadsheetId}-${worksheet.sheetId}-${id}`),
+          }),
+        ),
+      };
+    }),
   );
   return Object.assign({}, ...sheets, {
     id: hash(spreadsheetId),
